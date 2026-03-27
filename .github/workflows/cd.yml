@@ -21,7 +21,7 @@ jobs:
             platform: linux/arm64
             build_from: ghcr.io/home-assistant/aarch64-base-debian:bookworm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
