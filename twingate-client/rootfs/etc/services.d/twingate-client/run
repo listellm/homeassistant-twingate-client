@@ -38,6 +38,13 @@ chmod 600 /etc/twingate/service_key.json
 bashio::log.info "Configuring Twingate headless client..."
 twingate setup --headless /etc/twingate/service_key.json
 
+# Stop any previous daemon instance to clear stale state before starting.
+# Without this, socket/lock files from a crashed daemon prevent twingate start
+# from succeeding on s6-triggered restarts.
+bashio::log.info "Stopping any previous daemon instance..."
+twingate stop 2>/dev/null || true
+sleep 2
+
 bashio::log.info "Starting Twingate client..."
 twingate start
 
