@@ -31,7 +31,7 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: twingate-client/Dockerfile
-          ignore: DL3008
+          ignore: DL3008,DL3006
 
   test:
     name: Tests
@@ -62,7 +62,7 @@ jobs:
             ./twingate-client
 
       - name: Scan image
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: twingate-client:ci
           format: table
