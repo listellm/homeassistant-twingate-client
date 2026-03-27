@@ -21,11 +21,11 @@ else
     exit 1
 fi
 
-echo "Checking run.sh uses exec for twingate start..."
-if grep -q 'exec twingate start' "$RUN_SCRIPT"; then
-    echo "PASS: run.sh uses exec for proper signal forwarding"
+echo "Checking run.sh starts twingate and monitors daemon..."
+if grep -q 'twingate start' "$RUN_SCRIPT" && grep -q 'pgrep' "$RUN_SCRIPT"; then
+    echo "PASS: run.sh starts twingate and monitors daemon process"
 else
-    echo "FAIL: run.sh should exec twingate start for signal handling"
+    echo "FAIL: run.sh should start twingate and monitor the daemon"
     exit 1
 fi
 
