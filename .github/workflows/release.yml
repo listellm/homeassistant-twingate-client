@@ -44,6 +44,32 @@ jobs:
           echo "new=${NEW}" >> "$GITHUB_OUTPUT"
           echo "tag=v${NEW}" >> "$GITHUB_OUTPUT"
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git log --oneline --no-merges)
+          else
+            COMMITS=$(git log "${PREV_TAG}..HEAD" --oneline --no-merges)
+          fi
+
+          BREAKING=$(echo "$COMMITS" | grep -E '^[a-f0-9]+ breaking:' | sed 's/^[a-f0-9]* breaking: /- /' || true)
+          FEATURES=$(echo "$COMMITS" | grep -E '^[a-f0-9]+ feat:' | sed 's/^[a-f0-9]* feat: /- /' || true)
+          FIXES=$(echo "$COMMITS" | grep -E '^[a-f0-9]+ fix:' | sed 's/^[a-f0-9]* fix: /- /' || true)
+
+          BODY=""
+          [ -n "$BREAKING" ] && BODY="${BODY}## Breaking Changes\n${BREAKING}\n\n"
+          [ -n "$FEATURES" ] && BODY="${BODY}## Features\n${FEATURES}\n\n"
+          [ -n "$FIXES"    ] && BODY="${BODY}## Fixes\n${FIXES}\n\n"
+          [ -z "$BODY"     ] && BODY="No conventional commits since ${PREV_TAG}.\n"
+
+          {
+            echo "body<<EOF"
+            printf "%b" "$BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Update config.yaml version
         run: |
           sed -i "s/^version: .*/version: \"${{ steps.version.outputs.new }}\"/" twingate-client/config.yaml
@@ -62,4 +88,4 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}
-          generate_release_notes: true
+          body: ${{ steps.changelog.outputs.body }}
