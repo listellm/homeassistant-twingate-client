@@ -17,6 +17,11 @@ if [ ! -c /dev/net/tun ]; then
     chmod 600 /dev/net/tun
 fi
 
+# Ensure the container hostname is resolvable (Twingate requires this)
+if ! getent hosts "$(hostname)" > /dev/null 2>&1; then
+    echo "127.0.0.1 $(hostname)" >> /etc/hosts
+fi
+
 bashio::log.info "Writing service key..."
 echo "${SERVICE_KEY}" > /etc/twingate/service_key.json
 chmod 600 /etc/twingate/service_key.json
@@ -25,4 +30,15 @@ bashio::log.info "Configuring Twingate headless client..."
 twingate setup --headless /etc/twingate/service_key.json
 
 bashio::log.info "Starting Twingate client..."
-exec twingate start
+twingate start
+
+# twingate start daemonises and exits. Keep the s6 service alive
+# by monitoring the daemon process. Exit if it dies so s6 restarts us.
+sleep 5
+while true; do
+    if ! pgrep -f twingate > /dev/null 2>&1; then
+        bashio::log.error "Twingate daemon exited unexpectedly"
+        exit 1
+    fi
+    sleep 30
+done
