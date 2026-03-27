@@ -136,7 +136,7 @@ Scanned on 2026-03-27 against `twingate-client-scan:latest` (base: `ghcr.io/home
 
 - OS-level findings with no fixed version are open Debian bookworm issues; they cannot be resolved by bumping package versions until Debian publishes updates.
 - Findings in `stdlib` and `golang.org/x/crypto` are embedded inside the Twingate binary. These require Twingate to ship an updated release; the add-on will pick them up on the next Twingate package version bump.
-- The badges above are static. Wire Trivy into the CI workflow to keep them current automatically.
+- The table above is manually updated. Trivy runs automatically in the CD workflow on every merge to main; findings there reflect the current state.
 
 To reproduce the scan:
 
@@ -152,6 +152,10 @@ trivy image --severity LOW,MEDIUM,HIGH,CRITICAL twingate-client-scan:latest
 ## Contributing
 
 See [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
+### Release process
+
+Releases are created via the **Release** GitHub Actions workflow (Actions tab > Release > Run workflow). Select the bump type (`patch`, `minor`, or `major`); the workflow bumps `config.yaml`, updates `CHANGELOG.md`, commits, tags, and creates the GitHub release automatically. Do not manually bump the version or create tags.
 
 ## License
 
