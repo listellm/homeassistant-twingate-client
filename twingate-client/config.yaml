@@ -1,5 +1,5 @@
 name: Twingate Client
-version: "1.1.1"
+version: "1.1.2"
 slug: twingate_client
 description: >-
   Twingate headless client for Home Assistant OS, enabling the host to access
