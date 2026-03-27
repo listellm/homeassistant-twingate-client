@@ -74,11 +74,27 @@ jobs:
         run: |
           sed -i "s/^version: .*/version: \"${{ steps.version.outputs.new }}\"/" twingate-client/config.yaml
 
+      - name: Update CHANGELOG.md
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          DATE=$(date +%Y-%m-%d)
+          ENTRY="## [${TAG}] - ${DATE}\n\n${{ steps.changelog.outputs.body }}"
+
+          if [ -f CHANGELOG.md ]; then
+            TMP=$(mktemp)
+            head -3 CHANGELOG.md > "$TMP"
+            printf "\n%b\n" "$ENTRY" >> "$TMP"
+            tail -n +4 CHANGELOG.md >> "$TMP"
+            mv "$TMP" CHANGELOG.md
+          else
+            printf "# Changelog\n\nAll notable changes are documented here.\n\n%b\n" "$ENTRY" > CHANGELOG.md
+          fi
+
       - name: Commit, tag and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add twingate-client/config.yaml
+          git add twingate-client/config.yaml CHANGELOG.md
           git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip ci]"
           git tag "${{ steps.version.outputs.tag }}"
           git push --follow-tags
