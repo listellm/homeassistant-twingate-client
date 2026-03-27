@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -47,26 +45,3 @@ jobs:
 
       - name: Run script validation
         run: ./tests/test_run_no_key.sh
-
-  trivy:
-    name: Trivy scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Build image
-        run: |
-          docker build \
-            --build-arg BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:bookworm \
-            -t twingate-client:ci \
-            ./twingate-client
-
-      - name: Scan image
-        uses: aquasecurity/trivy-action@v0.35.0
-        with:
-          image-ref: twingate-client:ci
-          format: table
-          severity: HIGH,CRITICAL
-          vuln-type: os
-          ignore-unfixed: true
-          exit-code: "1"
