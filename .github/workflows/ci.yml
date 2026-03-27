@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: YAML lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_file: .config/.yamllint.yaml
+
+      - name: Shellcheck
+        run: |
+          find . -name '*.sh' \
+            -not -path '*/.git/*' \
+            | xargs shellcheck --severity=warning
+
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: twingate-client/Dockerfile
+          ignore: DL3008
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: YAML validity
+        run: ./tests/test_yaml_validity.sh
+
+      - name: Config schema
+        run: ./tests/test_config_schema.sh
+
+      - name: Run script validation
+        run: ./tests/test_run_no_key.sh
+
+  trivy:
+    name: Trivy scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:bookworm \
+            -t twingate-client:ci \
+            ./twingate-client
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: twingate-client:ci
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

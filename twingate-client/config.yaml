@@ -1,0 +1,23 @@
+name: Twingate Client
+version: "1.0.0"
+slug: twingate_client
+description: >-
+  Twingate headless client for Home Assistant OS, enabling the host to access
+  Twingate-protected resources via a Service Account.
+url: https://github.com/listellm/homeassistant-twingate-client
+arch:
+  - amd64
+  - aarch64
+startup: services
+boot: auto
+host_network: true
+privileged:
+  - NET_ADMIN
+map:
+  - config:rw
+options:
+  service_key: ""
+  log_level: info
+schema:
+  service_key: str # pragma: allowlist secret
+  log_level: list(debug|info|warning|error)

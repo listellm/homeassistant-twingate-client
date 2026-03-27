@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Verifies run.sh exits with an error when no service key is configured.
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+RUN_SCRIPT="$REPO_ROOT/twingate-client/run.sh"
+
+echo "Checking run.sh handles missing service key..."
+if grep -q 'bashio::log.fatal' "$RUN_SCRIPT" && grep -q 'exit 1' "$RUN_SCRIPT"; then
+    echo "PASS: run.sh exits fatally when service_key is empty"
+else
+    echo "FAIL: run.sh should exit with fatal error when service_key is missing"
+    exit 1
+fi
+
+echo "Checking run.sh creates TUN device..."
+if grep -q '/dev/net/tun' "$RUN_SCRIPT"; then
+    echo "PASS: run.sh handles TUN device creation"
+else
+    echo "FAIL: run.sh should create /dev/net/tun if missing"
+    exit 1
+fi
+
+echo "Checking run.sh uses exec for twingate start..."
+if grep -q 'exec twingate start' "$RUN_SCRIPT"; then
+    echo "PASS: run.sh uses exec for proper signal forwarding"
+else
+    echo "FAIL: run.sh should exec twingate start for signal handling"
+    exit 1
+fi
+
+echo ""
+echo "PASS: run.sh validation complete"
