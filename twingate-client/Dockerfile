@@ -14,7 +14,7 @@ RUN apt-get update \
         > /etc/apt/sources.list.d/twingate.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends twingate \
-    && apt-get purge -y --auto-remove curl gnupg \
+    && apt-get purge -y --auto-remove gnupg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
