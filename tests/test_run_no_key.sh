@@ -22,10 +22,10 @@ else
 fi
 
 echo "Checking run.sh starts twingate and monitors daemon..."
-if grep -q 'twingate start' "$RUN_SCRIPT" && grep -q 'pgrep' "$RUN_SCRIPT"; then
-    echo "PASS: run.sh starts twingate and monitors daemon process"
+if grep -q 'twingate start' "$RUN_SCRIPT" && grep -q 'twingate status' "$RUN_SCRIPT"; then
+    echo "PASS: run.sh starts twingate and monitors daemon health"
 else
-    echo "FAIL: run.sh should start twingate and monitor the daemon"
+    echo "FAIL: run.sh should start twingate and monitor via twingate status"
     exit 1
 fi
 

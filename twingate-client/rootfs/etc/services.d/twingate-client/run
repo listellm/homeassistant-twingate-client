@@ -42,11 +42,16 @@ bashio::log.info "Starting Twingate client..."
 twingate start
 
 # twingate start daemonises and exits. Keep the s6 service alive
-# by monitoring the daemon process. Exit if it dies so s6 restarts us.
-sleep 10
+# by monitoring the daemon using twingate status.
+sleep 15
+bashio::log.info "Initial status: $(twingate status 2>&1)"
+
 while true; do
-    if ! pgrep -f twingate > /dev/null 2>&1; then
-        bashio::log.error "Twingate daemon exited unexpectedly"
+    STATUS=$(twingate status 2>&1)
+    if [ "$STATUS" = "not-running" ]; then
+        bashio::log.error "Twingate daemon is not running"
+        bashio::log.warning "Daemon log tail:"
+        tail -20 /var/log/twingated.log 2>/dev/null || true
         exit 1
     fi
     sleep 30
