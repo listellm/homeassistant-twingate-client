@@ -8,6 +8,7 @@ url: https://github.com/listellm/homeassistant-twingate-client
 arch:
   - amd64
   - aarch64
+init: false
 startup: services
 boot: auto
 host_network: true
