@@ -22,6 +22,15 @@ if ! getent hosts "$(hostname)" > /dev/null 2>&1; then
     echo "127.0.0.1 $(hostname)" >> /etc/hosts
 fi
 
+# Override DNS to avoid Twingate detecting Docker/HA stub resolvers
+# (127.0.0.11 or 172.30.x.x) as its own DNS stubs, which prevents
+# the tunnel interface from coming up.
+bashio::log.info "Configuring DNS for Twingate..."
+cat > /etc/resolv.conf << 'DNSEOF'
+nameserver 1.1.1.1
+nameserver 8.8.8.8
+DNSEOF
+
 bashio::log.info "Writing service key..."
 echo "${SERVICE_KEY}" > /etc/twingate/service_key.json
 chmod 600 /etc/twingate/service_key.json
@@ -34,7 +43,7 @@ twingate start
 
 # twingate start daemonises and exits. Keep the s6 service alive
 # by monitoring the daemon process. Exit if it dies so s6 restarts us.
-sleep 5
+sleep 10
 while true; do
     if ! pgrep -f twingate > /dev/null 2>&1; then
         bashio::log.error "Twingate daemon exited unexpectedly"
