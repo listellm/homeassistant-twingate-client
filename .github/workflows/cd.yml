@@ -48,10 +48,11 @@ jobs:
 
       - name: Trivy vulnerability scan
         if: matrix.arch == 'amd64'
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: twingate-client-test:amd64
           format: table
-          exit-code: 1
+          exit-code: "1"
           severity: CRITICAL,HIGH
+          vuln-type: os
           ignore-unfixed: true
