@@ -3,6 +3,7 @@
 
 SERVICE_KEY=$(bashio::config 'service_key')
 LOG_LEVEL=$(bashio::config 'log_level')
+CONFIGURE_DNS=$(bashio::config 'configure_hassio_dns')
 export LOG_LEVEL
 
 if [ -z "${SERVICE_KEY}" ]; then
@@ -52,6 +53,71 @@ twingate start
 # by monitoring the daemon using twingate status.
 sleep 15
 bashio::log.info "Initial status: $(twingate status 2>&1)"
+
+# --------------------------------------------------------------------------
+# Configure hassio-dns to use Twingate's internal DNS resolvers.
+# Other add-ons (e.g. OpenClaw) use hassio-dns (172.30.32.3) which does not
+# go through Twingate's DNS interception. Adding Twingate's DNS IPs as
+# upstream servers in hassio-dns ensures all containers can resolve
+# Twingate-protected resource domains to their virtual tunnel IPs.
+# --------------------------------------------------------------------------
+if [ "${CONFIGURE_DNS}" = "true" ]; then
+    configure_hassio_dns() {
+        # Extract Twingate internal DNS IPs from the sdwan route table.
+        # These are the 100.95.0.x host routes that Twingate creates.
+        local tg_dns_ips
+        tg_dns_ips=$(ip route show | grep -oP '100\.95\.0\.\d+(?= dev sdwan)' | head -4)
+
+        if [ -z "${tg_dns_ips}" ]; then
+            bashio::log.warning "No Twingate DNS IPs found in route table. Skipping hassio-dns configuration."
+            return 1
+        fi
+
+        # Save current hassio-dns server config for restoration on shutdown
+        local current_servers
+        current_servers=$(curl -s -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+            http://supervisor/dns/info \
+            | sed -n 's/.*"servers":\[\([^]]*\)\].*/\1/p' 2>/dev/null)
+        echo "${current_servers}" > /tmp/hassio_dns_original_servers
+
+        # Build the API payload with Twingate DNS servers
+        local dns_payload="["
+        local first=true
+        for ip in ${tg_dns_ips}; do
+            if [ "${first}" = "true" ]; then
+                first=false
+            else
+                dns_payload+=","
+            fi
+            dns_payload+="\"dns://${ip}\""
+        done
+        dns_payload+="]"
+
+        bashio::log.info "Configuring hassio-dns with Twingate resolvers: ${dns_payload}"
+
+        local result
+        result=$(curl -s -o /dev/null -w '%{http_code}' \
+            -X POST \
+            -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"servers\": ${dns_payload}}" \
+            http://supervisor/dns/options)
+
+        if [ "${result}" = "200" ]; then
+            bashio::log.info "Hassio-dns configured with Twingate DNS resolvers"
+            # Restart hassio-dns to apply the new config
+            curl -s -X POST \
+                -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+                http://supervisor/dns/restart > /dev/null 2>&1
+            return 0
+        else
+            bashio::log.warning "Failed to configure hassio-dns (HTTP ${result})"
+            return 1
+        fi
+    }
+
+    configure_hassio_dns
+fi
 
 while true; do
     STATUS=$(twingate status 2>&1)

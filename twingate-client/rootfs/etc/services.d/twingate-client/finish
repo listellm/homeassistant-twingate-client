@@ -1,4 +1,33 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 
+# Restore hassio-dns to remove Twingate resolvers on shutdown.
+# Without the tunnel, Twingate DNS IPs are unreachable and would cause
+# resolution failures for all containers.
+if [ -f /tmp/hassio_dns_original_servers ]; then
+    ORIGINAL=$(cat /tmp/hassio_dns_original_servers)
+    if [ -n "${ORIGINAL}" ]; then
+        bashio::log.info "Restoring original hassio-dns servers: ${ORIGINAL}"
+        curl -s -X POST \
+            -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"servers\": [${ORIGINAL}]}" \
+            http://supervisor/dns/options > /dev/null 2>&1
+        curl -s -X POST \
+            -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+            http://supervisor/dns/restart > /dev/null 2>&1
+    else
+        bashio::log.info "Clearing hassio-dns custom servers (restoring defaults)"
+        curl -s -X POST \
+            -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"servers": []}' \
+            http://supervisor/dns/options > /dev/null 2>&1
+        curl -s -X POST \
+            -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+            http://supervisor/dns/restart > /dev/null 2>&1
+    fi
+    rm -f /tmp/hassio_dns_original_servers
+fi
+
 bashio::log.info "Twingate client stopped"

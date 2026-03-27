@@ -31,6 +31,25 @@ twingate-client/
 - Service key is stored in add-on options and written to `/etc/twingate/service_key.json` at startup
 - Base images are HA official Debian Bookworm (not Alpine, as Twingate requires glibc)
 - Only amd64 and aarch64 supported (Twingate client does not publish armv7 packages)
+- `hassio_api: true` for configuring hassio-dns with Twingate resolvers
+
+## Hassio-DNS Integration
+
+Twingate intercepts DNS for protected resources at the TUN interface level, returning
+virtual IPs in the `100.96.0.0/12` range that route through the tunnel. However, other
+HAOS add-on containers use hassio-dns (`172.30.32.3`) which forwards to upstream DNS
+servers, bypassing Twingate's interception entirely. This means containers like OpenClaw
+resolve Twingate-protected domains to their real (unreachable) private IPs.
+
+The `configure_hassio_dns` option (default: true) fixes this by:
+
+1. Detecting Twingate's internal DNS resolver IPs from `100.95.0.x` routes in the sdwan route table
+2. Calling the Supervisor API to set them as hassio-dns upstream servers
+3. Restoring the original DNS config when the add-on stops
+
+Twingate's DNS resolvers handle both protected resources (returning virtual tunnel IPs) and
+regular domains (forwarding to upstream). The hassio-dns `fallback: true` setting provides
+Cloudflare DoT as a safety net if the Twingate resolvers become unreachable.
 
 ## Build and Test
 
