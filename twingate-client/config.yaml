@@ -12,6 +12,8 @@ init: false
 startup: services
 boot: auto
 host_network: true
+hassio_api: true
+hassio_role: default
 privileged:
   - NET_ADMIN
 map:
@@ -19,6 +21,8 @@ map:
 options:
   service_key: ""
   log_level: info
+  configure_hassio_dns: true
 schema:
   service_key: str # pragma: allowlist secret
   log_level: list(debug|info|warning|error)
+  configure_hassio_dns: bool?
