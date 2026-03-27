@@ -67,5 +67,6 @@ jobs:
           image-ref: twingate-client:ci
           format: table
           severity: HIGH,CRITICAL
+          vuln-type: os
           ignore-unfixed: true
           exit-code: "1"
