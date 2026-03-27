@@ -20,7 +20,4 @@ RUN apt-get update \
 
 RUN mkdir -p /etc/twingate
 
-COPY run.sh /
-RUN chmod a+x /run.sh
-
-CMD [ "/run.sh" ]
+COPY rootfs /

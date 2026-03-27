@@ -30,6 +30,12 @@ If you do not yet have a Twingate account, sign up at [twingate.com](https://www
 
 ### Step 2: Install the add-on
 
+Click the button below to add this repository to your Home Assistant instance:
+
+[![Add repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Flistellm%2Fhomeassistant-twingate-client)
+
+Or manually:
+
 1. In Home Assistant, go to **Settings > Add-ons > Add-on Store**
 2. Click the three-dot menu (top right) and select **Repositories**
 3. Paste the following URL and click **Add**:
@@ -39,7 +45,7 @@ If you do not yet have a Twingate account, sign up at [twingate.com](https://www
    ```
 
 4. Close the dialog. The **Twingate Client** add-on should now appear in the store.
-5. Click it and press **Install**. The image will be built for your architecture (this may take a few minutes on first install).
+5. Click it and press **Install**. The image is built locally on your device from the Dockerfile. On a Raspberry Pi this can take 5-10 minutes on first install while it downloads the base image and Twingate packages. The spinner is normal; do not navigate away.
 
 ### Step 3: Configure and start
 

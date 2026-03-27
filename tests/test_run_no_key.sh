@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-RUN_SCRIPT="$REPO_ROOT/twingate-client/run.sh"
+RUN_SCRIPT="$REPO_ROOT/twingate-client/rootfs/etc/services.d/twingate-client/run"
 
 echo "Checking run.sh handles missing service key..."
 if grep -q 'bashio::log.fatal' "$RUN_SCRIPT" && grep -q 'exit 1' "$RUN_SCRIPT"; then
