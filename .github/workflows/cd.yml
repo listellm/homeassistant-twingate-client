@@ -48,7 +48,7 @@ jobs:
 
       - name: Trivy vulnerability scan
         if: matrix.arch == 'amd64'
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: twingate-client-test:amd64
           format: table
